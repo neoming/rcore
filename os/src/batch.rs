@@ -8,6 +8,7 @@ const KERNEL_STACK_SIZE: usize = 4096 * 2;
 const MAX_APP_NUM: usize = 16;
 const APP_BASE_ADDRESS: usize = 0x80400000;
 const APP_SIZE_LIMIT: usize = 0x200000;
+const STACK_SIZE: usize = 0x1000;
 
 #[repr(align(4096))]
 struct KernelStack {
@@ -70,6 +71,17 @@ impl AppManger {
         self.current_app
     }
 
+    pub fn get_current_app_len(&self) -> usize {
+        trace!(
+            "[trace] app_{} [{:#x}, {:#x})",
+            self.current_app,
+            self.app_start[self.current_app - 1],
+            self.app_start[self.current_app]
+        );
+        trace!("[trace] len{}", self.app_start[self.current_app] - self.app_start[self.current_app - 1]);
+        self.app_start[self.current_app] - self.app_start[self.current_app - 1]
+    }
+
     pub fn move_to_next_app(&mut self) {
         self.current_app += 1;
     }
@@ -128,6 +140,26 @@ pub fn init() {
 
 pub fn print_app_info() {
     APP_MANAGER.exclusive_access().print_app_info();
+}
+
+pub fn check_current_app_mem(buffer: usize, len: usize) -> bool {
+    let app_manager = APP_MANAGER.exclusive_access();
+    let (bottom, top) = (APP_BASE_ADDRESS, APP_BASE_ADDRESS + app_manager.get_current_app_len());
+    let (right, left) = (buffer, buffer + len);
+    if bottom <= right && top >= left {
+        return true;
+    }
+    let sp = USER_STACK.get_sp();
+    let (sp_bottom, sp_top) = (sp, sp - STACK_SIZE);
+    if right >= sp_top && left <= sp_bottom {
+        return true;
+    }
+    debug!("[debug] #######################################");
+    debug!("[debug] left: {:#x}, right: {:#x}", left, right);
+    debug!("[debug] bottom: {:#x}, top: {:#x}", bottom, top);
+    debug!("[debug] sp_bottom: {:#x}, sp_top: {:#x}", sp_bottom, sp_top);
+    debug!("[debug] sp: {:#x}", sp);
+    false
 }
 
 pub fn run_next_app() -> ! {

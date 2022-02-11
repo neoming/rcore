@@ -7,6 +7,8 @@ pub mod console;
 mod lang_items;
 mod syscall;
 
+pub use console::{STDIN, STDOUT};
+
 #[no_mangle]
 #[link_section = ".text.entry"]
 pub extern "C" fn _start() -> ! {
