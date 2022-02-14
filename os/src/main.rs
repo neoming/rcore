@@ -8,9 +8,11 @@ use core::arch::global_asm;
 mod console;
 mod lang_items;
 mod sbi;
-mod batch;
+mod config;
+mod loader;
 mod sync;
 mod syscall;
+mod task;
 mod trap;
 
 global_asm!(include_str!("entry.asm"));
@@ -34,6 +36,9 @@ pub fn rust_main() -> ! {
     clear_bss();
     info!("[kernel] Hello, rCore!");
     trap::init();
-    batch::init();
-    batch::run_next_app();
+    info!("[kernel] trap init!");
+    loader::load_apps();
+    info!("[kernel] load apps!");
+    task::run_first_task();
+    panic!("Unreachable in rust_main!")
 }
