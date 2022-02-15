@@ -35,10 +35,12 @@ fn clear_bss() {
 pub fn rust_main() -> ! {
     clear_bss();
     info!("[kernel] Hello, rCore!");
+    info!("[kernel] trap init start");
     trap::init();
-    info!("[kernel] trap init!");
+    info!("[kernel] trap init done");
+    info!("[kernel] load apps start");
     loader::load_apps();
-    info!("[kernel] load apps!");
+    info!("[kernel] load apps done");
     task::run_first_task();
     panic!("Unreachable in rust_main!")
 }
