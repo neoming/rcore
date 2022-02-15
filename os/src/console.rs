@@ -6,7 +6,7 @@ pub enum LogLevel {
     ERROR = 5, WARN = 4, INFO = 3, DEBUG = 2, TRACE = 1
 }
 
-const LOG: LogLevel = LogLevel::DEBUG;
+const LOG: LogLevel = LogLevel::INFO;
 
 struct Stdout;
 

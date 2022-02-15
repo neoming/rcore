@@ -14,6 +14,7 @@ mod sync;
 mod syscall;
 mod task;
 mod trap;
+mod timer;
 
 global_asm!(include_str!("entry.asm"));
 global_asm!(include_str!("link_app.S"));
@@ -35,12 +36,14 @@ fn clear_bss() {
 pub fn rust_main() -> ! {
     clear_bss();
     info!("[kernel] Hello, rCore!");
-    info!("[kernel] trap init start");
     trap::init();
     info!("[kernel] trap init done");
-    info!("[kernel] load apps start");
     loader::load_apps();
     info!("[kernel] load apps done");
+    trap::enable_timer_interrupt();
+    info!("[kernel] enable timer interrupt done");
+    timer::set_next_trigger();
+    info!("[kernel] set next trigger done");
     task::run_first_task();
     panic!("Unreachable in rust_main!")
 }

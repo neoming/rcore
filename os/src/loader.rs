@@ -107,5 +107,5 @@ pub fn get_current_app_addr(app_id: usize) -> (usize, usize, usize, usize){
     let (bottom, top) = (base_addr, base_addr + APP_LEN[app_id]);
     let sp = USER_STACK[app_id].get_sp();
     let (sp_bottom, sp_top) = (sp, sp - STACK_SIZE);
-    (bottom, top , sp_bottom, sp_top)
+    (bottom, top, sp_bottom, sp_top)
 }
