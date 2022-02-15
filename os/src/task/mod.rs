@@ -5,7 +5,7 @@ mod switch;
 mod task;
 
 use crate::config::MAX_APP_NUM;
-use crate::loader::{get_num_app, init_app_cx};
+use crate::loader::{get_num_app, init_app_cx, get_current_app_addr};
 use crate::sync::UPSafeCell;
 use lazy_static::*;
 use switch::__switch;
@@ -99,6 +99,25 @@ impl TaskManager {
             panic!("All applications completed!");
         }
     }
+
+    fn check_current_task_mem(&self, buffer: usize, len: usize) -> bool{
+        let inner = self.inner.exclusive_access();
+        let app_id = inner.current_task;
+        let (bottom, top, sp_bottom, sp_top) = get_current_app_addr(app_id);
+        let (right, left) = (buffer, buffer + len);
+        if bottom <= right && top >= left {
+            return true;
+        }
+        if right >= sp_top && left <= sp_bottom {
+            return true;
+        }
+        debug!("[debug] #######################################");
+        debug!("[debug] left: {:#x}, right: {:#x}", left, right);
+        debug!("[debug] bottom: {:#x}, top: {:#x}", bottom, top);
+        debug!("[debug] sp_bottom: {:#x}, sp_top: {:#x}", sp_bottom, sp_top);
+        debug!("[debug] sp: {:#x}", sp_bottom);
+        false
+    }
 }
 
 pub fn run_first_task() {
@@ -128,5 +147,5 @@ pub fn exit_current_and_run_next() {
 }
 
 pub fn check_current_task_mem(buffer: usize, len: usize) -> bool {
-    true
+    TASK_MANAGER.check_current_task_mem(buffer, len)
 }

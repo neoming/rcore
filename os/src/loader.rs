@@ -1,6 +1,7 @@
 use crate::config::*;
 use crate::trap::TrapContext;
 use core::arch::asm;
+use lazy_static::*;
 
 #[repr(align(4096))]
 #[derive(Copy, Clone)]
@@ -52,6 +53,21 @@ pub fn get_num_app() -> usize {
     unsafe { (_num_app as usize as *const usize).read_volatile() }
 }
 
+lazy_static! {
+    pub static ref APP_LEN: [usize; MAX_APP_NUM] = {
+        extern "C" {
+            fn _num_app();
+        }
+        let num_app_ptr = _num_app as usize as *const usize;
+        let num_app = get_num_app();
+        let app_start = unsafe { core::slice::from_raw_parts(num_app_ptr.add(1), num_app + 1) };
+        let mut app_len: [usize; MAX_APP_NUM] = [0; MAX_APP_NUM];
+        for i in 0..num_app {
+            app_len[i] = app_start[i + 1] - app_start[i];
+        }
+        app_len
+    };
+}
 pub fn load_apps() {
     extern "C" {
         fn _num_app();
@@ -84,4 +100,12 @@ pub fn init_app_cx(app_id: usize) -> usize {
         get_base_i(app_id),
         USER_STACK[app_id].get_sp(),
     ))
+}
+
+pub fn get_current_app_addr(app_id: usize) -> (usize, usize, usize, usize){
+    let base_addr = get_base_i(app_id);
+    let (bottom, top) = (base_addr, base_addr + APP_LEN[app_id]);
+    let sp = USER_STACK[app_id].get_sp();
+    let (sp_bottom, sp_top) = (sp, sp - STACK_SIZE);
+    (bottom, top , sp_bottom, sp_top)
 }
