@@ -125,6 +125,7 @@ pub fn run_first_task() {
 }
 
 fn run_next_task() {
+    info!("[kernel] switch task");
     TASK_MANAGER.run_next_task();
 }
 
